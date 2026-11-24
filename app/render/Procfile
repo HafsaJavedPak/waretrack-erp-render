@@ -1,0 +1,5 @@
+web: /home/frappe/frappe-bench/env/bin/gunicorn --chdir=/home/frappe/frappe-bench/sites --bind=127.0.0.1:8000 --threads=4 --workers=${GUNICORN_WORKERS:-2} --worker-class=gthread --worker-tmp-dir=/dev/shm --timeout=120 --preload frappe.app:application
+socketio: node /home/frappe/frappe-bench/apps/frappe/socketio.js
+worker: bench worker --queue long,default,short
+schedule: bench schedule
+nginx: nginx-entrypoint.sh

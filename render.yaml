@@ -1,0 +1,48 @@
+# One-click Render Blueprint for ERPNext v16 (same image as local frappe_docker).
+# Render dashboard -> New -> Blueprint -> pick this repo -> Apply.
+services:
+  # ERPNext: web + socket.io + worker + scheduler + redis in one container.
+  - type: web
+    name: waretrack-erp
+    runtime: docker
+    dockerfilePath: ./app/Dockerfile
+    dockerContext: ./app
+    plan: 1c-2g            # 2 GB RAM; ERPNext is tight on less
+    region: singapore      # closest Render region to Pakistan; change before first apply if you prefer frankfurt
+    disk:
+      name: sites
+      mountPath: /home/frappe/frappe-bench/sites
+      sizeGB: 5
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: SITE_NAME
+        value: frontend
+      - key: DB_HOST
+        fromService:
+          name: waretrack-db
+          type: pserv
+          property: host
+      - key: DB_ROOT_PASSWORD
+        fromService:
+          name: waretrack-db
+          type: pserv
+          envVarKey: MARIADB_ROOT_PASSWORD
+      - key: ADMIN_PASSWORD   # Administrator login; view it under Environment
+        generateValue: true
+
+  # MariaDB 11.8, private (not reachable from the internet).
+  - type: pserv
+    name: waretrack-db
+    runtime: docker
+    dockerfilePath: ./mariadb/Dockerfile
+    dockerContext: ./mariadb
+    plan: 0.5c-512mb
+    region: singapore
+    disk:
+      name: mysql
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MARIADB_ROOT_PASSWORD
+        generateValue: true
